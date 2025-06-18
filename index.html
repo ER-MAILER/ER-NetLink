@@ -3,10 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ER NetLink - Cross-Platform Remote Control</title>
+    <title>Secure Remote Control</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
     <style>
+        /* Base Styles */
         :root {
             --primary-color: #3498db;
             --success-color: #2ecc71;
@@ -34,6 +35,7 @@
             touch-action: manipulation;
         }
 
+        /* Container & Header */
         .container {
             max-width: 1200px;
             margin: 0 auto;
@@ -43,6 +45,10 @@
         .app-header {
             text-align: center;
             margin-bottom: 30px;
+            padding: 20px 0;
+            background-color: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
         }
 
         .app-header h1 {
@@ -56,6 +62,7 @@
             font-size: 1rem;
         }
 
+        /* Panels */
         .app-container {
             display: flex;
             gap: 20px;
@@ -86,6 +93,7 @@
             border-bottom: 1px solid #eee;
         }
 
+        /* Forms & Buttons */
         .credentials-box {
             background-color: #f8f9fa;
             border-radius: var(--border-radius);
@@ -167,6 +175,7 @@
             cursor: not-allowed;
         }
 
+        /* Status Messages */
         .status-message {
             padding: 10px;
             border-radius: 4px;
@@ -193,6 +202,7 @@
             font-weight: 500;
         }
 
+        /* Remote Screen */
         .remote-screen-container {
             display: none;
             margin-top: 30px;
@@ -226,6 +236,7 @@
             font-size: 0.9rem;
         }
 
+        /* Access Control */
         .access-control {
             margin-top: 20px;
         }
@@ -248,30 +259,9 @@
 
         .access-list li i {
             margin-right: 8px;
-            color: var(--success-color);
         }
 
-        .loading {
-            display: none;
-            text-align: center;
-            padding: 20px;
-        }
-
-        .spinner {
-            border: 4px solid rgba(0, 0, 0, 0.1);
-            border-radius: 50%;
-            border-top: 4px solid var(--primary-color);
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 15px;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
+        /* Modals & Toasts */
         .modal {
             display: none;
             position: fixed;
@@ -348,35 +338,56 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        .connection-info {
-            margin-top: 20px;
-            padding: 15px;
-            background-color: #f8f9fa;
+        /* Security Indicators */
+        .connection-indicator {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background-color: #e74c3c;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+            z-index: 1002;
+            display: none;
+        }
+
+        .connection-indicator.active {
+            background-color: #2ecc71;
+            display: block;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+
+        .security-badge {
+            position: fixed;
+            bottom: 10px;
+            left: 10px;
+            background-color: var(--dark-color);
+            color: white;
+            padding: 5px 10px;
             border-radius: var(--border-radius);
-            font-size: 0.9rem;
+            font-size: 0.8rem;
+            z-index: 1000;
         }
 
-        .connection-info p {
-            margin-bottom: 8px;
-        }
-
-        .connection-info strong {
-            color: var(--dark-color);
-        }
-
-        .control-buttons {
+        /* Permission Controls */
+        .permission-toggle {
             display: flex;
-            gap: 10px;
-            margin-top: 15px;
-            flex-wrap: wrap;
+            align-items: center;
+            margin-bottom: 10px;
         }
 
-        .control-btn {
-            flex: 1;
-            min-width: 100px;
+        .permission-toggle input {
+            margin-right: 10px;
         }
 
-        /* Mobile specific styles */
+        /* Responsive Adjustments */
         @media (max-width: 768px) {
             .panel {
                 padding: 15px;
@@ -390,61 +401,16 @@
                 min-height: 200px;
             }
         }
-
-        /* Touch controls */
-        .touch-controls {
-            display: none;
-            margin-top: 15px;
-        }
-
-        .touch-controls.active {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-        }
-
-        .touch-btn {
-            aspect-ratio: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.5rem;
-            background-color: var(--primary-color);
-            color: white;
-            border-radius: var(--border-radius);
-            user-select: none;
-        }
-
-        .touch-btn:active {
-            background-color: #2980b9;
-        }
-
-        /* Keyboard shortcut helper */
-        .keyboard-shortcuts {
-            margin-top: 15px;
-            font-size: 0.8rem;
-            color: var(--gray-color);
-        }
-
-        .shortcut-item {
-            display: flex;
-            margin-bottom: 5px;
-        }
-
-        .shortcut-key {
-            background-color: #e0e0e0;
-            padding: 2px 5px;
-            border-radius: 3px;
-            margin-right: 8px;
-            font-family: monospace;
-        }
     </style>
 </head>
 <body>
+    <div class="connection-indicator" id="connection-indicator"></div>
+    <div class="security-badge" id="security-badge">Connection: Not Secure</div>
+
     <div class="container">
         <header class="app-header">
-            <h1>ER NetLink</h1>
-            <p>Cross-Platform Remote Control</p>
+            <h1>Secure Remote Control</h1>
+            <p>End-to-end encrypted remote access</p>
         </header>
 
         <div class="app-container">
@@ -466,11 +432,11 @@
                 <div class="access-control">
                     <h3>Access Permissions:</h3>
                     <ul class="access-list">
-                        <li><i class="fas fa-check-circle"></i> Mouse Control</li>
-                        <li><i class="fas fa-check-circle"></i> Keyboard Control</li>
-                        <li><i class="fas fa-check-circle"></i> File Transfer</li>
-                        <li><i class="fas fa-check-circle"></i> Clipboard Access</li>
-                        <li><i class="fas fa-check-circle"></i> Admin Privileges</li>
+                        <li><i class="fas fa-check-circle" style="color: var(--success-color);"></i> Mouse Control</li>
+                        <li><i class="fas fa-check-circle" style="color: var(--success-color);"></i> Keyboard Control</li>
+                        <li><i class="fas fa-times-circle" style="color: var(--danger-color);"></i> File Transfer</li>
+                        <li><i class="fas fa-times-circle" style="color: var(--danger-color);"></i> Clipboard Access</li>
+                        <li><i class="fas fa-times-circle" style="color: var(--danger-color);"></i> Admin Privileges</li>
                     </ul>
                 </div>
 
@@ -520,41 +486,57 @@
             </div>
             <div class="remote-screen-status" id="remote-screen-status">Waiting for connection...</div>
             
-            <div class="touch-controls" id="touch-controls">
-                <div class="touch-btn" id="touch-up"><i class="fas fa-arrow-up"></i></div>
-                <div class="touch-btn" id="touch-left"><i class="fas fa-arrow-left"></i></div>
-                <div class="touch-btn" id="touch-right"><i class="fas fa-arrow-right"></i></div>
-                <div class="touch-btn" id="touch-click"><i class="fas fa-mouse-pointer"></i></div>
-                <div class="touch-btn" id="touch-down"><i class="fas fa-arrow-down"></i></div>
-                <div class="touch-btn" id="touch-right-click"><i class="fas fa-mouse-pointer"></i><sup>R</sup></div>
-                <div class="touch-btn" id="touch-esc"><i class="fas fa-keyboard"></i> ESC</div>
-                <div class="touch-btn" id="touch-enter"><i class="fas fa-keyboard"></i> ENTER</div>
-                <div class="touch-btn" id="touch-space"><i class="fas fa-keyboard"></i> SPACE</div>
-            </div>
-            
             <div class="control-buttons">
                 <button id="fullscreen-btn" class="btn btn-primary control-btn">Fullscreen</button>
                 <button id="disconnect-btn" class="btn btn-danger control-btn">Disconnect</button>
             </div>
-            
-            <div class="keyboard-shortcuts">
-                <p><strong>Keyboard Shortcuts:</strong></p>
-                <div class="shortcut-item">
-                    <span class="shortcut-key">ESC</span>
-                    <span>Disconnect</span>
+        </div>
+    </div>
+
+    <!-- Consent Modal -->
+    <div class="modal" id="consent-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Security & Privacy Consent</h3>
+            </div>
+            <div class="modal-body">
+                <p><strong>Before proceeding, please understand:</strong></p>
+                <ul class="access-list">
+                    <li><i class="fas fa-exclamation-circle" style="color: var(--warning-color);"></i> Remote control grants access to your device</li>
+                    <li><i class="fas fa-lock" style="color: var(--success-color);"></i> All session activity is end-to-end encrypted</li>
+                    <li><i class="fas fa-clock" style="color: var(--primary-color);"></i> Sessions automatically timeout after 30 minutes</li>
+                    <li><i class="fas fa-shield-alt" style="color: var(--success-color);"></i> You can revoke access at any time</li>
+                </ul>
+                
+                <div class="access-control" style="margin-top: 20px;">
+                    <h3>Grant Specific Permissions:</h3>
+                    <div class="permission-toggle">
+                        <input type="checkbox" id="permission-mouse" checked>
+                        <label for="permission-mouse">Mouse Control</label>
+                    </div>
+                    <div class="permission-toggle">
+                        <input type="checkbox" id="permission-keyboard" checked>
+                        <label for="permission-keyboard">Keyboard Control</label>
+                    </div>
+                    <div class="permission-toggle">
+                        <input type="checkbox" id="permission-clipboard">
+                        <label for="permission-clipboard">Clipboard Access</label>
+                    </div>
                 </div>
-                <div class="shortcut-item">
-                    <span class="shortcut-key">F</span>
-                    <span>Toggle Fullscreen</span>
+
+                <div class="form-group" style="margin-top: 20px;">
+                    <input type="checkbox" id="understand-risks">
+                    <label for="understand-risks">I understand the risks and consent to remote access</label>
                 </div>
-                <div class="shortcut-item">
-                    <span class="shortcut-key">Ctrl+C</span>
-                    <span>Copy remote clipboard</span>
-                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-danger" id="decline-consent">Decline</button>
+                <button class="btn btn-success" id="accept-consent" disabled>Accept</button>
             </div>
         </div>
     </div>
 
+    <!-- Disconnect Modal -->
     <div class="modal" id="disconnect-modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -571,6 +553,7 @@
         </div>
     </div>
 
+    <!-- Error Modal -->
     <div class="modal" id="error-modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -586,10 +569,10 @@
         </div>
     </div>
 
+    <!-- Toast Notification -->
     <div class="toast" id="toast">Copied to clipboard!</div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <script src="app.js"></script>
 </body>
 </html>
