@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ER NetLink - Cross-Platform Remote Control</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #3498db;
+            --success-color: #2ecc71;
+            --danger-color: #e74c3c;
+            --warning-color: #f39c12;
+            --dark-color: #2c3e50;
+            --light-color: #ecf0f1;
+            --gray-color: #95a5a6;
+            --border-radius: 8px;
+            --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+            touch-action: manipulation;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .app-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .app-header h1 {
+            color: var(--dark-color);
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        .app-header p {
+            color: var(--gray-color);
+            font-size: 1rem;
+        }
+
+        .app-container {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 30px;
+            flex-direction: column;
+        }
+
+        @media (min-width: 768px) {
+            .app-container {
+                flex-direction: row;
+            }
+        }
+
+        .panel {
+            background-color: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            padding: 20px;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .panel-title {
+            font-size: 1.3rem;
+            color: var(--dark-color);
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .credentials-box {
+            background-color: #f8f9fa;
+            border-radius: var(--border-radius);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+            font-family: 'Roboto', sans-serif;
+        }
+
+        .form-control.readonly {
+            background-color: #f0f0f0;
+            font-family: monospace;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 4px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.3s;
+            user-select: none;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #2980b9;
+        }
+
+        .btn-success {
+            background-color: var(--success-color);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background-color: #27ae60;
+        }
+
+        .btn-danger {
+            background-color: var(--danger-color);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background-color: #c0392b;
+        }
+
+        .btn-block {
+            display: block;
+            width: 100%;
+        }
+
+        .btn:disabled {
+            background-color: #95a5a6;
+            cursor: not-allowed;
+        }
+
+        .status-message {
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 20px;
+            font-style: italic;
+        }
+
+        .status-info {
+            color: var(--primary-color);
+        }
+
+        .status-success {
+            color: var(--success-color);
+            font-weight: 500;
+        }
+
+        .status-warning {
+            color: var(--warning-color);
+            font-weight: 500;
+        }
+
+        .status-error {
+            color: var(--danger-color);
+            font-weight: 500;
+        }
+
+        .remote-screen-container {
+            display: none;
+            margin-top: 30px;
+        }
+
+        .remote-screen {
+            background-color: black;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            margin-bottom: 15px;
+            position: relative;
+            min-height: 300px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            touch-action: none;
+        }
+
+        .remote-screen img {
+            max-width: 100%;
+            max-height: 70vh;
+            object-fit: contain;
+            user-select: none;
+            -webkit-user-drag: none;
+        }
+
+        .remote-screen-status {
+            padding: 10px;
+            background-color: #f0f0f0;
+            border-radius: 0 0 var(--border-radius) var(--border-radius);
+            font-size: 0.9rem;
+        }
+
+        .access-control {
+            margin-top: 20px;
+        }
+
+        .access-control h3 {
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+            color: var(--dark-color);
+        }
+
+        .access-list {
+            list-style: none;
+        }
+
+        .access-list li {
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+        }
+
+        .access-list li i {
+            margin-right: 8px;
+            color: var(--success-color);
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-radius: 50%;
+            border-top: 4px solid var(--primary-color);
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background-color: white;
+            border-radius: var(--border-radius);
+            padding: 20px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: var(--box-shadow);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-title {
+            font-size: 1.3rem;
+            color: var(--dark-color);
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--gray-color);
+        }
+
+        .modal-body {
+            margin-bottom: 20px;
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: var(--dark-color);
+            color: white;
+            padding: 15px 20px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            display: none;
+            z-index: 1001;
+            max-width: 90%;
+        }
+
+        .toast.show {
+            display: block;
+            animation: fadeIn 0.3s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .connection-info {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: var(--border-radius);
+            font-size: 0.9rem;
+        }
+
+        .connection-info p {
+            margin-bottom: 8px;
+        }
+
+        .connection-info strong {
+            color: var(--dark-color);
+        }
+
+        .control-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+
+        .control-btn {
+            flex: 1;
+            min-width: 100px;
+        }
+
+        /* Mobile specific styles */
+        @media (max-width: 768px) {
+            .panel {
+                padding: 15px;
+            }
+            
+            .btn {
+                padding: 10px 15px;
+            }
+            
+            .remote-screen {
+                min-height: 200px;
+            }
+        }
+
+        /* Touch controls */
+        .touch-controls {
+            display: none;
+            margin-top: 15px;
+        }
+
+        .touch-controls.active {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+
+        .touch-btn {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            background-color: var(--primary-color);
+            color: white;
+            border-radius: var(--border-radius);
+            user-select: none;
+        }
+
+        .touch-btn:active {
+            background-color: #2980b9;
+        }
+
+        /* Keyboard shortcut helper */
+        .keyboard-shortcuts {
+            margin-top: 15px;
+            font-size: 0.8rem;
+            color: var(--gray-color);
+        }
+
+        .shortcut-item {
+            display: flex;
+            margin-bottom: 5px;
+        }
+
+        .shortcut-key {
+            background-color: #e0e0e0;
+            padding: 2px 5px;
+            border-radius: 3px;
+            margin-right: 8px;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="app-header">
+            <h1>ER NetLink</h1>
+            <p>Cross-Platform Remote Control</p>
+        </header>
+
+        <div class="app-container">
+            <div class="panel">
+                <h2 class="panel-title">Allow Remote Control</h2>
+                <div class="credentials-box">
+                    <div class="form-group">
+                        <label for="your-uri">Your Connection ID:</label>
+                        <input type="text" id="your-uri" class="form-control readonly" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label for="your-password">Your Access Password:</label>
+                        <input type="text" id="your-password" class="form-control readonly" readonly>
+                    </div>
+                    <button id="copy-credentials" class="btn btn-primary btn-block">Copy Credentials</button>
+                    <button id="refresh-credentials" class="btn btn-block" style="margin-top: 10px;">Generate New</button>
+                </div>
+
+                <div class="access-control">
+                    <h3>Access Permissions:</h3>
+                    <ul class="access-list">
+                        <li><i class="fas fa-check-circle"></i> Mouse Control</li>
+                        <li><i class="fas fa-check-circle"></i> Keyboard Control</li>
+                        <li><i class="fas fa-check-circle"></i> File Transfer</li>
+                        <li><i class="fas fa-check-circle"></i> Clipboard Access</li>
+                        <li><i class="fas fa-check-circle"></i> Admin Privileges</li>
+                    </ul>
+                </div>
+
+                <div id="server-status" class="status-message status-info">Status: Ready to connect</div>
+
+                <div class="connection-info">
+                    <p><strong>How to connect:</strong></p>
+                    <p>1. Share your Connection ID and Password with your partner</p>
+                    <p>2. Wait for them to connect to you</p>
+                    <p>3. Once connected, you'll see their screen</p>
+                </div>
+            </div>
+
+            <div class="panel">
+                <h2 class="panel-title">Control Remote Computer</h2>
+                <div class="form-group">
+                    <label for="partner-uri">Partner Connection ID:</label>
+                    <input type="text" id="partner-uri" class="form-control" placeholder="Enter partner's connection ID">
+                </div>
+                <div class="form-group">
+                    <label for="partner-password">Partner Access Password:</label>
+                    <input type="password" id="partner-password" class="form-control" placeholder="Enter partner's password">
+                </div>
+                <button id="connect-btn" class="btn btn-success btn-block">Connect to Partner</button>
+
+                <div class="loading" id="connecting-loader">
+                    <div class="spinner"></div>
+                    <p>Connecting to partner...</p>
+                </div>
+
+                <div id="client-status" class="status-message status-info">Status: Not connected</div>
+
+                <div class="connection-info">
+                    <p><strong>How to connect:</strong></p>
+                    <p>1. Get the Connection ID and Password from your partner</p>
+                    <p>2. Enter them in the fields above</p>
+                    <p>3. Click "Connect to Partner"</p>
+                    <p>4. Once connected, you'll see their screen</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="remote-screen-container" id="remote-screen-container">
+            <h2 class="panel-title">Remote Screen</h2>
+            <div class="remote-screen" id="remote-screen">
+                <img id="remote-screen-img" src="" alt="Remote screen will appear here">
+            </div>
+            <div class="remote-screen-status" id="remote-screen-status">Waiting for connection...</div>
+            
+            <div class="touch-controls" id="touch-controls">
+                <div class="touch-btn" id="touch-up"><i class="fas fa-arrow-up"></i></div>
+                <div class="touch-btn" id="touch-left"><i class="fas fa-arrow-left"></i></div>
+                <div class="touch-btn" id="touch-right"><i class="fas fa-arrow-right"></i></div>
+                <div class="touch-btn" id="touch-click"><i class="fas fa-mouse-pointer"></i></div>
+                <div class="touch-btn" id="touch-down"><i class="fas fa-arrow-down"></i></div>
+                <div class="touch-btn" id="touch-right-click"><i class="fas fa-mouse-pointer"></i><sup>R</sup></div>
+                <div class="touch-btn" id="touch-esc"><i class="fas fa-keyboard"></i> ESC</div>
+                <div class="touch-btn" id="touch-enter"><i class="fas fa-keyboard"></i> ENTER</div>
+                <div class="touch-btn" id="touch-space"><i class="fas fa-keyboard"></i> SPACE</div>
+            </div>
+            
+            <div class="control-buttons">
+                <button id="fullscreen-btn" class="btn btn-primary control-btn">Fullscreen</button>
+                <button id="disconnect-btn" class="btn btn-danger control-btn">Disconnect</button>
+            </div>
+            
+            <div class="keyboard-shortcuts">
+                <p><strong>Keyboard Shortcuts:</strong></p>
+                <div class="shortcut-item">
+                    <span class="shortcut-key">ESC</span>
+                    <span>Disconnect</span>
+                </div>
+                <div class="shortcut-item">
+                    <span class="shortcut-key">F</span>
+                    <span>Toggle Fullscreen</span>
+                </div>
+                <div class="shortcut-item">
+                    <span class="shortcut-key">Ctrl+C</span>
+                    <span>Copy remote clipboard</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="disconnect-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Disconnect Confirmation</h3>
+                <button class="modal-close" id="close-disconnect-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to disconnect from your partner?</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn" id="cancel-disconnect">Cancel</button>
+                <button class="btn btn-primary" id="confirm-disconnect">Disconnect</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="error-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Connection Error</h3>
+                <button class="modal-close" id="close-error-modal">&times;</button>
+            </div>
+            <div class="modal-body" id="error-message">
+                <!-- Error message will be inserted here -->
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" id="close-error-btn">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast">Copied to clipboard!</div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
