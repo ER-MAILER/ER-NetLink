@@ -338,7 +338,7 @@ class RemoteControlApp {
 
     connectToSignalingServer() {
         // Connect to signaling server (replace with your server URL)
-        this.socket = io('https://your-signaling-server.com', {
+        this.socket = io('https://branch-shell-iodine.glitch.me', {
             reconnectionAttempts: 5,
             reconnectionDelay: 1000,
             transports: ['websocket']
