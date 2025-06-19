@@ -3,139 +3,421 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ER-NetLink - Screen Sharing</title>
+    <title>GlobalShare Pro - Secure Screen Sharing</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        :root {
+            --primary-color: #4361ee;
+            --secondary-color: #3f37c9;
+            --success-color: #4cc9f0;
+            --danger-color: #f72585;
+            --warning-color: #f8961e;
+            --light-color: #f8f9fa;
+            --dark-color: #212529;
+            --border-radius: 8px;
+            --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
         body {
-            font-family: Arial, sans-serif;
-            max-width: 800px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: var(--dark-color);
+            background-color: #f5f7fa;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
             margin: 0 auto;
             padding: 20px;
-            background-color: #f5f5f5;
         }
-        .container {
-            display: flex;
-            flex-direction: column;
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            color: var(--primary-color);
+            margin-bottom: 10px;
+            font-size: 2.2rem;
+        }
+
+        .subtitle {
+            color: #6c757d;
+            font-size: 1.1rem;
+        }
+
+        .app-container {
+            display: grid;
+            grid-template-columns: 1fr;
             gap: 20px;
         }
+
+        @media (min-width: 992px) {
+            .app-container {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
         .panel {
-            border: 1px solid #ddd;
-            padding: 20px;
-            border-radius: 8px;
             background-color: white;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            padding: 25px;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
         }
-        button {
-            padding: 10px 15px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 4px;
+
+        .panel-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .panel-header i {
+            margin-right: 10px;
+            color: var(--primary-color);
+            font-size: 1.5rem;
+        }
+
+        .panel-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: var(--dark-color);
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px 20px;
+            border-radius: var(--border-radius);
+            font-weight: 500;
             cursor: pointer;
+            transition: var(--transition);
+            border: none;
+            font-size: 1rem;
             margin: 5px 0;
-            font-size: 16px;
-            transition: background-color 0.3s;
         }
-        button:hover {
-            background-color: #45a049;
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
         }
-        button:disabled {
-            background-color: #cccccc;
+
+        .btn-primary:hover {
+            background-color: var(--secondary-color);
+        }
+
+        .btn-success {
+            background-color: var(--success-color);
+            color: white;
+        }
+
+        .btn-danger {
+            background-color: var(--danger-color);
+            color: white;
+        }
+
+        .btn-warning {
+            background-color: var(--warning-color);
+            color: white;
+        }
+
+        .btn:disabled {
+            background-color: #e9ecef;
+            color: #6c757d;
             cursor: not-allowed;
         }
-        input {
-            padding: 10px;
-            width: 100%;
-            margin: 5px 0;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 16px;
+
+        .btn-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 15px 0;
         }
+
+        .btn-sm {
+            padding: 8px 15px;
+            font-size: 0.9rem;
+        }
+
+        .video-container {
+            position: relative;
+            width: 100%;
+            background-color: black;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            margin: 15px 0;
+            aspect-ratio: 16/9;
+        }
+
+        .video-placeholder {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: white;
+            background-color: #2b2b2b;
+        }
+
+        .video-placeholder i {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            color: #6c757d;
+        }
+
         video {
             width: 100%;
-            max-height: 500px;
-            background-color: #000;
-            border-radius: 4px;
-            margin-top: 10px;
-        }
-        #remoteVideo {
+            height: 100%;
+            object-fit: contain;
             display: none;
         }
-        .status {
-            margin-top: 10px;
-            padding: 8px;
-            border-radius: 4px;
+
+        .status-indicator {
+            padding: 10px;
+            border-radius: var(--border-radius);
+            margin: 10px 0;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
         }
-        .connecting {
-            background-color: #fff3cd;
-            color: #856404;
+
+        .status-indicator i {
+            margin-right: 8px;
         }
-        .connected {
-            background-color: #d4edda;
-            color: #155724;
+
+        .status-connecting {
+            background-color: rgba(248, 150, 30, 0.1);
+            color: var(--warning-color);
+            border-left: 4px solid var(--warning-color);
         }
-        .error {
-            background-color: #f8d7da;
-            color: #721c24;
+
+        .status-connected {
+            background-color: rgba(76, 201, 240, 0.1);
+            color: var(--success-color);
+            border-left: 4px solid var(--success-color);
         }
-        #connectionInfo {
+
+        .status-error {
+            background-color: rgba(247, 37, 133, 0.1);
+            color: var(--danger-color);
+            border-left: 4px solid var(--danger-color);
+        }
+
+        .status-idle {
+            background-color: rgba(108, 117, 125, 0.1);
+            color: #6c757d;
+            border-left: 4px solid #6c757d;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 10px 15px;
+            border: 1px solid #ced4da;
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+            transition: var(--transition);
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.25);
+        }
+
+        .connection-info {
+            background-color: #f8f9fa;
+            border-radius: var(--border-radius);
+            padding: 15px;
             margin-top: 15px;
-            padding: 15px;
-            background-color: #e9ecef;
-            border-radius: 4px;
-            display: none;
         }
-        #mobileWarning {
-            display: none;
-            padding: 15px;
-            background-color: #fff3cd;
-            border-left: 6px solid #ffeb3b;
-            margin-bottom: 20px;
+
+        .copy-input-group {
+            display: flex;
+            gap: 10px;
+            margin: 10px 0;
         }
-        .loading {
+
+        .copy-input-group input {
+            flex: 1;
+        }
+
+        .loading-spinner {
             display: inline-block;
             width: 20px;
             height: 20px;
-            border: 3px solid rgba(255,255,255,.3);
+            border: 3px solid rgba(255, 255, 255, 0.3);
             border-radius: 50%;
-            border-top-color: #fff;
+            border-top-color: white;
             animation: spin 1s ease-in-out infinite;
             margin-right: 10px;
         }
+
         @keyframes spin {
             to { transform: rotate(360deg); }
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: var(--dark-color);
+            color: white;
+            padding: 15px 25px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            transform: translateY(100px);
+            opacity: 0;
+            transition: var(--transition);
+            z-index: 1000;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .mobile-warning {
+            display: none;
+            background-color: rgba(248, 150, 30, 0.1);
+            color: var(--warning-color);
+            padding: 15px;
+            border-radius: var(--border-radius);
+            margin-bottom: 20px;
+            border-left: 4px solid var(--warning-color);
+        }
+
+        @media (max-width: 768px) {
+            .btn-group {
+                flex-direction: column;
+            }
+            
+            .btn {
+                width: 100%;
+            }
         }
     </style>
 </head>
 <body>
-    <h1>ER-NetLink Screen Sharing</h1>
-    
-    <div id="mobileWarning">
-        <strong>Note:</strong> Screen sharing is not supported on mobile devices. Please use a desktop browser.
-    </div>
-    
     <div class="container">
-        <div class="panel">
-            <h2>Share Your Screen</h2>
-            <button id="startBtn">Start Sharing</button>
-            <div id="localStatus" class="status">Not sharing</div>
-            <div id="connectionInfo">
-                <p>Share this ID with your partner:</p>
-                <input type="text" id="connectionId" readonly>
-                <button id="copyIdBtn">Copy ID</button>
-            </div>
+        <header>
+            <h1>GlobalShare Pro</h1>
+            <p class="subtitle">Secure, real-time screen sharing for teams worldwide</p>
+        </header>
+
+        <div class="mobile-warning">
+            <i class="fas fa-exclamation-circle"></i> Screen sharing is not available on mobile devices. You can share your camera instead.
         </div>
-        
-        <div class="panel">
-            <h2>View Remote Screen</h2>
-            <input type="text" id="remoteIdInput" placeholder="Enter connection ID">
-            <button id="connectBtn">Connect</button>
-            <button id="disconnectBtn" disabled>Disconnect</button>
-            <div id="remoteStatus" class="status">Not connected</div>
-            <video id="remoteVideo" autoplay playsinline></video>
+
+        <div class="app-container">
+            <div class="panel">
+                <div class="panel-header">
+                    <i class="fas fa-desktop"></i>
+                    <h2 class="panel-title">My Sharing</h2>
+                </div>
+                
+                <div class="btn-group">
+                    <button id="screenShareBtn" class="btn btn-primary">
+                        <i class="fas fa-desktop"></i> Share Screen
+                    </button>
+                    <button id="cameraShareBtn" class="btn btn-primary">
+                        <i class="fas fa-camera"></i> Share Camera
+                    </button>
+                    <button id="stopSharingBtn" class="btn btn-danger" disabled>
+                        <i class="fas fa-stop"></i> Stop Sharing
+                    </button>
+                </div>
+
+                <div id="localStatus" class="status-indicator status-idle">
+                    <i class="fas fa-info-circle"></i> Ready to share
+                </div>
+
+                <div class="video-container">
+                    <div id="localVideoPlaceholder" class="video-placeholder">
+                        <i class="fas fa-user"></i>
+                        <span>Your shared content will appear here</span>
+                    </div>
+                    <video id="localVideo" autoplay playsinline muted></video>
+                </div>
+
+                <div class="connection-info">
+                    <h3><i class="fas fa-qrcode"></i> Your Connection ID</h3>
+                    <div class="copy-input-group">
+                        <input type="text" id="connectionId" class="form-control" readonly>
+                        <button id="copyIdBtn" class="btn btn-success btn-sm">
+                            <i class="fas fa-copy"></i> Copy
+                        </button>
+                    </div>
+                    
+                    <h3 style="margin-top: 20px;"><i class="fas fa-user-friends"></i> Connect to Partner</h3>
+                    <div class="form-group">
+                        <label for="remoteIdInput" class="form-label">Partner's Connection ID</label>
+                        <input type="text" id="remoteIdInput" class="form-control" placeholder="Enter partner's connection ID">
+                    </div>
+                    <div class="btn-group">
+                        <button id="connectBtn" class="btn btn-success">
+                            <i class="fas fa-plug"></i> Connect
+                        </button>
+                        <button id="disconnectBtn" class="btn btn-danger" disabled>
+                            <i class="fas fa-plug"></i> Disconnect
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-header">
+                    <i class="fas fa-user-friends"></i>
+                    <h2 class="panel-title">Partner's Sharing</h2>
+                </div>
+                
+                <div id="remoteStatus" class="status-indicator status-idle">
+                    <i class="fas fa-info-circle"></i> Waiting for connection
+                </div>
+
+                <div id="remoteConnectionInfo" class="status-indicator" style="display: none;">
+                    <i class="fas fa-info-circle"></i> Partner is sharing: <span id="remoteSharingType"></span>
+                </div>
+
+                <div class="video-container">
+                    <div id="remoteVideoPlaceholder" class="video-placeholder">
+                        <i class="fas fa-user-friends"></i>
+                        <span>Partner's shared content will appear here</span>
+                    </div>
+                    <video id="remoteVideo" autoplay playsinline></video>
+                </div>
+            </div>
         </div>
     </div>
 
+    <div id="toast" class="toast"></div>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script>
         // Configuration
         const socket = io('https://branch-shell-iodine.glitch.me', {
@@ -146,18 +428,25 @@
         });
         
         // DOM Elements
-        const startBtn = document.getElementById('startBtn');
+        const screenShareBtn = document.getElementById('screenShareBtn');
+        const cameraShareBtn = document.getElementById('cameraShareBtn');
+        const stopSharingBtn = document.getElementById('stopSharingBtn');
         const connectBtn = document.getElementById('connectBtn');
         const disconnectBtn = document.getElementById('disconnectBtn');
         const copyIdBtn = document.getElementById('copyIdBtn');
         const connectionId = document.getElementById('connectionId');
         const remoteIdInput = document.getElementById('remoteIdInput');
         const remoteVideo = document.getElementById('remoteVideo');
+        const localVideo = document.getElementById('localVideo');
         const localStatus = document.getElementById('localStatus');
         const remoteStatus = document.getElementById('remoteStatus');
-        const connectionInfo = document.getElementById('connectionInfo');
-        const mobileWarning = document.getElementById('mobileWarning');
-        
+        const remoteSharingType = document.getElementById('remoteSharingType');
+        const remoteConnectionInfo = document.getElementById('remoteConnectionInfo');
+        const localVideoPlaceholder = document.getElementById('localVideoPlaceholder');
+        const remoteVideoPlaceholder = document.getElementById('remoteVideoPlaceholder');
+        const toast = document.getElementById('toast');
+        const mobileWarning = document.querySelector('.mobile-warning');
+
         // WebRTC variables
         let peerConnection;
         let localStream;
@@ -165,6 +454,8 @@
         let isCaller = false;
         let isSharing = false;
         let isConnected = false;
+        let sharingType = null; // 'screen' or 'camera'
+        let remotePeerId = null;
         
         // Check for mobile device
         const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
@@ -175,8 +466,8 @@
         function init() {
             if (isMobile) {
                 mobileWarning.style.display = 'block';
-                startBtn.disabled = true;
-                startBtn.textContent = 'Not available on mobile';
+                screenShareBtn.disabled = true;
+                screenShareBtn.title = 'Screen sharing not available on mobile';
             }
             
             updateUI();
@@ -185,12 +476,15 @@
             socket.on('connect', () => {
                 socketId = socket.id;
                 console.log('Connected to signaling server with ID:', socketId);
-                updateStatus(localStatus, 'Ready to share');
+                connectionId.value = socketId;
+                updateStatus(localStatus, 'Ready to share', 'idle');
+                showToast('Connected to signaling server');
                 updateUI();
             });
             
             socket.on('disconnect', () => {
                 updateStatus(localStatus, 'Disconnected from server', 'error');
+                showToast('Disconnected from server', 'error');
                 resetConnection();
                 updateUI();
             });
@@ -198,6 +492,7 @@
             socket.on('connect_error', (error) => {
                 console.error('Connection error:', error);
                 updateStatus(localStatus, 'Connection error: ' + error.message, 'error');
+                showToast('Connection error: ' + error.message, 'error');
                 updateUI();
             });
             
@@ -206,62 +501,113 @@
             socket.on('answer', handleAnswer);
             socket.on('ice-candidate', handleIceCandidate);
             socket.on('error', handleRemoteError);
+            socket.on('sharing-type', handleSharingType);
             
             // Button event listeners
-            startBtn.addEventListener('click', startSharing);
+            screenShareBtn.addEventListener('click', () => startSharing('screen'));
+            cameraShareBtn.addEventListener('click', () => startSharing('camera'));
+            stopSharingBtn.addEventListener('click', stopSharing);
             connectBtn.addEventListener('click', connectToPeer);
             disconnectBtn.addEventListener('click', disconnectFromPeer);
             copyIdBtn.addEventListener('click', copyConnectionId);
+            
+            // Update UI when input changes
+            remoteIdInput.addEventListener('input', updateUI);
         }
         
-        function updateStatus(element, message, type = '') {
-            element.textContent = message;
-            element.className = 'status' + (type ? ' ' + type : '');
+        function updateStatus(element, message, type = 'idle') {
+            const iconMap = {
+                'connecting': 'fa-sync-alt',
+                'connected': 'fa-check-circle',
+                'error': 'fa-exclamation-circle',
+                'idle': 'fa-info-circle'
+            };
+            
+            element.innerHTML = `<i class="fas ${iconMap[type]}"></i> ${message}`;
+            element.className = `status-indicator status-${type}`;
+        }
+        
+        function showToast(message, type = 'success') {
+            const colors = {
+                'success': '#28a745',
+                'error': '#dc3545',
+                'warning': '#ffc107',
+                'info': '#17a2b8'
+            };
+            
+            toast.textContent = message;
+            toast.style.backgroundColor = colors[type] || colors['info'];
+            toast.classList.add('show');
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
         }
         
         function updateUI() {
-            startBtn.disabled = isSharing || isMobile;
+            screenShareBtn.disabled = isSharing || (isMobile && !navigator.mediaDevices?.getDisplayMedia);
+            cameraShareBtn.disabled = isSharing;
+            stopSharingBtn.disabled = !isSharing;
             connectBtn.disabled = isConnected || !socket.connected || !remoteIdInput.value.trim();
             disconnectBtn.disabled = !isConnected;
         }
         
-        async function startSharing() {
+        async function startSharing(type) {
             try {
-                // Check for screen sharing support
-                if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia) {
-                    updateStatus(localStatus, 'Screen sharing not supported', 'error');
-                    return;
+                sharingType = type;
+                updateStatus(localStatus, `Starting ${type} sharing...`, 'connecting');
+                
+                if (type === 'screen') {
+                    // Get screen share stream
+                    localStream = await navigator.mediaDevices.getDisplayMedia({
+                        video: {
+                            displaySurface: 'monitor',
+                            width: { ideal: 1920 },
+                            height: { ideal: 1080 },
+                            frameRate: { ideal: 30 }
+                        },
+                        audio: false
+                    });
+                } else {
+                    // Get camera stream
+                    localStream = await navigator.mediaDevices.getUserMedia({
+                        video: {
+                            width: { ideal: 1280 },
+                            height: { ideal: 720 },
+                            facingMode: 'user'
+                        },
+                        audio: false
+                    });
                 }
                 
-                updateStatus(localStatus, 'Requesting screen share...', 'connecting');
-                
-                // Get screen share stream
-                localStream = await navigator.mediaDevices.getDisplayMedia({
-                    video: {
-                        displaySurface: 'monitor',
-                        width: { ideal: 1920 },
-                        height: { ideal: 1080 },
-                        frameRate: { ideal: 30 }
-                    },
-                    audio: false
-                });
-                
                 isSharing = true;
-                updateStatus(localStatus, 'Screen sharing active', 'connected');
-                connectionInfo.style.display = 'block';
-                connectionId.value = socketId;
+                updateStatus(localStatus, `${type === 'screen' ? 'Screen' : 'Camera'} sharing active`, 'connected');
+                localVideo.srcObject = localStream;
+                localVideo.style.display = 'block';
+                localVideoPlaceholder.style.display = 'none';
+                
+                // Notify connected peer about our sharing type
+                if (isConnected) {
+                    socket.emit('sharing-type', {
+                        to: remotePeerId,
+                        type: type
+                    });
+                }
                 
                 // Handle when user stops sharing
                 localStream.getVideoTracks()[0].onended = () => {
                     stopSharing();
                 };
                 
+                showToast(`${type === 'screen' ? 'Screen' : 'Camera'} sharing started`);
                 updateUI();
                 
             } catch (error) {
-                console.error('Error starting screen share:', error);
+                console.error(`Error starting ${type} share:`, error);
                 updateStatus(localStatus, `Error: ${error.message}`, 'error');
+                showToast(`Failed to start sharing: ${error.message}`, 'error');
                 isSharing = false;
+                sharingType = null;
                 updateUI();
             }
         }
@@ -273,191 +619,233 @@
             }
             
             isSharing = false;
-            updateStatus(localStatus, 'Screen sharing stopped');
-            connectionInfo.style.display = 'none';
-            resetConnection();
+            sharingType = null;
+            updateStatus(localStatus, 'Sharing stopped', 'idle');
+            localVideo.srcObject = null;
+            localVideo.style.display = 'none';
+            localVideoPlaceholder.style.display = 'flex';
+            
+            // Notify peer we stopped sharing
+            if (isConnected) {
+                socket.emit('sharing-type', {
+                    to: remotePeerId,
+                    type: 'none'
+                });
+            }
+            
+            showToast('Sharing stopped');
             updateUI();
+        }
+        
+        function handleSharingType(data) {
+            if (data.type === 'none') {
+                remoteConnectionInfo.style.display = 'none';
+                remoteSharingType.textContent = '';
+            } else {
+                remoteConnectionInfo.style.display = 'block';
+                remoteSharingType.textContent = data.type;
+            }
         }
         
         async function connectToPeer() {
             const remoteId = remoteIdInput.value.trim();
             if (!remoteId) {
                 updateStatus(remoteStatus, 'Please enter a connection ID', 'error');
+                showToast('Please enter a connection ID', 'error');
                 return;
             }
             
             if (!socket.connected) {
                 updateStatus(remoteStatus, 'Not connected to signaling server', 'error');
+                showToast('Not connected to signaling server', 'error');
                 return;
             }
             
-            updateStatus(remoteStatus, 'Connecting to peer...', 'connecting');
+            remotePeerId = remoteId;
+            updateStatus(remoteStatus, 'Connecting to partner...', 'connecting');
             isCaller = true;
             isConnected = true;
             updateUI();
             
             try {
-                // Create peer connection with better configuration
+                // Create peer connection with Xirsys TURN servers
                 peerConnection = new RTCPeerConnection({
                     iceServers: [
-                        { urls: 'stun:stun.l.google.com:19302' },
-                        { urls: 'stun:stun1.l.google.com:19302' },
-                        { urls: 'stun:stun2.l.google.com:19302' },
-                        { urls: 'stun:stun3.l.google.com:19302' },
-                        { urls: 'stun:stun4.l.google.com:19302' }
+                        {
+                            urls: [
+                                "stun:bn-turn2.xirsys.com",
+                                "turn:bn-turn2.xirsys.com:80?transport=udp",
+                                "turn:bn-turn2.xirsys.com:3478?transport=udp",
+                                "turn:bn-turn2.xirsys.com:80?transport=tcp",
+                                "turn:bn-turn2.xirsys.com:3478?transport=tcp",
+                                "turns:bn-turn2.xirsys.com:443?transport=tcp",
+                                "turns:bn-turn2.xirsys.com:5349?transport=tcp"
+                            ],
+                            username: "LR7FQBdKoiQZWM2PSsUC_abt7DQ6yuhUHr4mZliRpAx2B2Nw5ggbg1Zd_2Sq5XwyAAAAAGhUdAVlci1tYWlsZXI=",
+                            credential: "9ccc9c78-4d4c-11f0-b8f9-0242ac140004"
+                        }
                     ],
                     iceTransportPolicy: 'all',
                     bundlePolicy: 'max-bundle',
                     rtcpMuxPolicy: 'require'
                 });
-                
-                // Enhanced event handlers with better logging
+
+                // Enhanced event handlers
                 peerConnection.onicecandidate = (event) => {
-                    console.log('ICE Candidate:', event.candidate);
                     if (event.candidate) {
                         socket.emit('ice-candidate', {
-                            to: remoteId,
+                            to: remotePeerId,
                             candidate: event.candidate
                         });
-                    } else {
-                        console.log('ICE Gathering Complete');
                     }
                 };
                 
                 peerConnection.ontrack = (event) => {
-                    console.log('Track received:', event.track, event.streams);
                     if (event.streams && event.streams[0]) {
                         remoteVideo.srcObject = event.streams[0];
                         remoteVideo.style.display = 'block';
-                        updateStatus(remoteStatus, 'Connected to peer', 'connected');
-                        isConnected = true;
-                        updateUI();
+                        remoteVideoPlaceholder.style.display = 'none';
+                        updateStatus(remoteStatus, 'Connected to partner', 'connected');
                     }
                 };
                 
                 peerConnection.oniceconnectionstatechange = () => {
-                    console.log('ICE connection state:', peerConnection.iceConnectionState);
                     if (peerConnection.iceConnectionState === 'disconnected' || 
                         peerConnection.iceConnectionState === 'failed') {
-                        updateStatus(remoteStatus, 'Disconnected', 'error');
+                        updateStatus(remoteStatus, 'Disconnected from partner', 'error');
+                        showToast('Disconnected from partner', 'error');
                         resetConnection();
                     }
                 };
                 
-                peerConnection.onconnectionstatechange = () => {
-                    console.log('Connection state:', peerConnection.connectionState);
-                };
+                // Add local stream if sharing
+                if (isSharing && localStream) {
+                    localStream.getTracks().forEach(track => {
+                        peerConnection.addTrack(track, localStream);
+                    });
+                }
                 
-                peerConnection.onsignalingstatechange = () => {
-                    console.log('Signaling state:', peerConnection.signalingState);
-                };
-                
-                // Create offer with better options
+                // Create offer
                 const offer = await peerConnection.createOffer({
-                    offerToReceiveVideo: true,
-                    iceRestart: false,
-                    voiceActivityDetection: false
+                    offerToReceiveVideo: true
                 });
                 
                 await peerConnection.setLocalDescription(offer);
-                console.log('Local description set:', peerConnection.localDescription);
                 
                 socket.emit('offer', {
-                    to: remoteId,
-                    offer: offer
+                    to: remotePeerId,
+                    offer: offer,
+                    sharingType: sharingType
                 });
+                
+                showToast('Connection request sent');
                 
             } catch (error) {
                 console.error('Error creating connection:', error);
-                updateStatus(remoteStatus, `Error: ${error.message}`, 'error');
+                updateStatus(remoteStatus, `Connection failed: ${error.message}`, 'error');
+                showToast(`Connection failed: ${error.message}`, 'error');
                 resetConnection();
             }
         }
-        
+
         async function handleOffer(data) {
-            if (!isSharing) {
-                socket.emit('error', {
-                    to: data.from,
-                    message: 'Remote peer is not sharing screen'
-                });
-                return;
-            }
-            
             updateStatus(remoteStatus, 'Incoming connection request...', 'connecting');
             isCaller = false;
             isConnected = true;
+            remotePeerId = data.from;
             updateUI();
             
+            // Show what the peer is sharing
+            if (data.sharingType) {
+                remoteConnectionInfo.style.display = 'block';
+                remoteSharingType.textContent = data.sharingType;
+            }
+            
             try {
+                // Create peer connection with Xirsys TURN servers
                 peerConnection = new RTCPeerConnection({
                     iceServers: [
-                        { urls: 'stun:stun.l.google.com:19302' },
-                        { urls: 'stun:stun1.l.google.com:19302' },
-                        { urls: 'stun:stun2.l.google.com:19302' },
-                        { urls: 'stun:stun3.l.google.com:19302' },
-                        { urls: 'stun:stun4.l.google.com:19302' }
+                        {
+                            urls: [
+                                "stun:bn-turn2.xirsys.com",
+                                "turn:bn-turn2.xirsys.com:80?transport=udp",
+                                "turn:bn-turn2.xirsys.com:3478?transport=udp",
+                                "turn:bn-turn2.xirsys.com:80?transport=tcp",
+                                "turn:bn-turn2.xirsys.com:3478?transport=tcp",
+                                "turns:bn-turn2.xirsys.com:443?transport=tcp",
+                                "turns:bn-turn2.xirsys.com:5349?transport=tcp"
+                            ],
+                            username: "LR7FQBdKoiQZWM2PSsUC_abt7DQ6yuhUHr4mZliRpAx2B2Nw5ggbg1Zd_2Sq5XwyAAAAAGhUdAVlci1tYWlsZXI=",
+                            credential: "9ccc9c78-4d4c-11f0-b8f9-0242ac140004"
+                        }
                     ],
                     iceTransportPolicy: 'all',
                     bundlePolicy: 'max-bundle',
                     rtcpMuxPolicy: 'require'
                 });
-                
-                // Add local stream
-                localStream.getTracks().forEach(track => {
-                    peerConnection.addTrack(track, localStream);
-                });
-                
-                // Set up enhanced event handlers
+
+                // Set up event handlers
                 peerConnection.onicecandidate = (event) => {
-                    console.log('ICE Candidate:', event.candidate);
                     if (event.candidate) {
                         socket.emit('ice-candidate', {
-                            to: data.from,
+                            to: remotePeerId,
                             candidate: event.candidate
                         });
                     }
                 };
                 
+                peerConnection.ontrack = (event) => {
+                    if (event.streams && event.streams[0]) {
+                        remoteVideo.srcObject = event.streams[0];
+                        remoteVideo.style.display = 'block';
+                        remoteVideoPlaceholder.style.display = 'none';
+                        updateStatus(remoteStatus, 'Connected to partner', 'connected');
+                    }
+                };
+                
                 peerConnection.oniceconnectionstatechange = () => {
-                    console.log('ICE connection state:', peerConnection.iceConnectionState);
                     if (peerConnection.iceConnectionState === 'disconnected' || 
                         peerConnection.iceConnectionState === 'failed') {
-                        updateStatus(remoteStatus, 'Disconnected', 'error');
+                        updateStatus(remoteStatus, 'Disconnected from partner', 'error');
+                        showToast('Disconnected from partner', 'error');
                         resetConnection();
                     }
                 };
                 
-                peerConnection.ontrack = (event) => {
-                    console.log('Track received:', event.track, event.streams);
-                    if (event.streams && event.streams[0]) {
-                        remoteVideo.srcObject = event.streams[0];
-                        remoteVideo.style.display = 'block';
-                    }
-                };
+                // Add local stream if sharing
+                if (isSharing && localStream) {
+                    localStream.getTracks().forEach(track => {
+                        peerConnection.addTrack(track, localStream);
+                    });
+                    
+                    // Notify peer about our sharing type
+                    socket.emit('sharing-type', {
+                        to: remotePeerId,
+                        type: sharingType
+                    });
+                }
                 
-                // Process offer with error handling
+                // Process offer
                 await peerConnection.setRemoteDescription(new RTCSessionDescription(data.offer));
-                console.log('Remote description set:', peerConnection.remoteDescription);
-                
                 const answer = await peerConnection.createAnswer();
                 await peerConnection.setLocalDescription(answer);
-                console.log('Local description set:', peerConnection.localDescription);
                 
                 socket.emit('answer', {
-                    to: data.from,
-                    answer: answer
+                    to: remotePeerId,
+                    answer: answer,
+                    sharingType: sharingType
                 });
                 
-                updateStatus(remoteStatus, 'Connected to peer', 'connected');
-                updateUI();
+                showToast('Connection established');
                 
             } catch (error) {
                 console.error('Error handling offer:', error);
                 socket.emit('error', {
-                    to: data.from,
+                    to: remotePeerId,
                     message: error.message
                 });
-                updateStatus(remoteStatus, `Error: ${error.message}`, 'error');
+                updateStatus(remoteStatus, `Connection failed: ${error.message}`, 'error');
+                showToast(`Connection failed: ${error.message}`, 'error');
                 resetConnection();
             }
         }
@@ -467,14 +855,20 @@
             
             try {
                 await peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
-                console.log('Remote description set:', peerConnection.remoteDescription);
-                updateStatus(remoteStatus, 'Connected to peer', 'connected');
-                remoteVideo.style.display = 'block';
-                isConnected = true;
-                updateUI();
+                updateStatus(remoteStatus, 'Connected to partner', 'connected');
+                
+                // Show what the peer is sharing
+                if (data.sharingType) {
+                    remoteConnectionInfo.style.display = 'block';
+                    remoteSharingType.textContent = data.sharingType;
+                }
+                
+                showToast('Connection established');
+                
             } catch (error) {
                 console.error('Error handling answer:', error);
-                updateStatus(remoteStatus, `Error: ${error.message}`, 'error');
+                updateStatus(remoteStatus, `Connection failed: ${error.message}`, 'error');
+                showToast(`Connection failed: ${error.message}`, 'error');
                 resetConnection();
             }
         }
@@ -484,21 +878,24 @@
             
             try {
                 await peerConnection.addIceCandidate(new RTCIceCandidate(data.candidate));
-                console.log('Added ICE candidate successfully');
             } catch (error) {
                 console.error('Error adding ICE candidate:', error);
             }
         }
         
         function handleRemoteError(data) {
-            updateStatus(remoteStatus, `Remote error: ${data.message}`, 'error');
+            updateStatus(remoteStatus, `Partner error: ${data.message}`, 'error');
+            showToast(`Partner error: ${data.message}`, 'error');
             resetConnection();
         }
         
         function disconnectFromPeer() {
             resetConnection();
-            updateStatus(remoteStatus, 'Disconnected');
-            updateUI();
+            updateStatus(remoteStatus, 'Disconnected', 'idle');
+            remoteVideoPlaceholder.style.display = 'flex';
+            remoteVideo.style.display = 'none';
+            remoteConnectionInfo.style.display = 'none';
+            showToast('Disconnected from partner');
         }
         
         function resetConnection() {
@@ -509,25 +906,18 @@
             
             remoteVideo.srcObject = null;
             remoteVideo.style.display = 'none';
+            remoteVideoPlaceholder.style.display = 'flex';
             isConnected = false;
             isCaller = false;
+            remotePeerId = null;
             updateUI();
         }
         
         function copyConnectionId() {
             connectionId.select();
             document.execCommand('copy');
-            
-            const originalText = localStatus.textContent;
-            updateStatus(localStatus, 'Connection ID copied to clipboard!', 'connected');
-            
-            setTimeout(() => {
-                updateStatus(localStatus, originalText, isSharing ? 'connected' : '');
-            }, 2000);
+            showToast('Connection ID copied to clipboard');
         }
-        
-        // Update UI when input changes
-        remoteIdInput.addEventListener('input', updateUI);
     </script>
 </body>
 </html>
