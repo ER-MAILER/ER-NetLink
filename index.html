@@ -84,10 +84,34 @@
             border-radius: 4px;
             display: none;
         }
+        #mobileWarning {
+            display: none;
+            padding: 15px;
+            background-color: #fff3cd;
+            border-left: 6px solid #ffeb3b;
+            margin-bottom: 20px;
+        }
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 10px;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body>
     <h1>ER-NetLink Screen Sharing</h1>
+    
+    <div id="mobileWarning">
+        <strong>Note:</strong> Screen sharing is not supported on mobile devices. Please use a desktop browser.
+    </div>
     
     <div class="container">
         <div class="panel">
@@ -132,6 +156,7 @@
         const localStatus = document.getElementById('localStatus');
         const remoteStatus = document.getElementById('remoteStatus');
         const connectionInfo = document.getElementById('connectionInfo');
+        const mobileWarning = document.getElementById('mobileWarning');
         
         // WebRTC variables
         let peerConnection;
@@ -141,32 +166,38 @@
         let isSharing = false;
         let isConnected = false;
         
+        // Check for mobile device
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        
         // Initialize
         init();
         
         function init() {
+            if (isMobile) {
+                mobileWarning.style.display = 'block';
+                startBtn.disabled = true;
+                startBtn.textContent = 'Not available on mobile';
+            }
+            
             updateUI();
             
             // Socket.io events
             socket.on('connect', () => {
                 socketId = socket.id;
                 console.log('Connected to signaling server with ID:', socketId);
-                localStatus.textContent = 'Ready to share';
-                localStatus.className = 'status';
+                updateStatus(localStatus, 'Ready to share');
                 updateUI();
             });
             
             socket.on('disconnect', () => {
-                localStatus.textContent = 'Disconnected from server';
-                localStatus.className = 'status error';
+                updateStatus(localStatus, 'Disconnected from server', 'error');
                 resetConnection();
                 updateUI();
             });
             
             socket.on('connect_error', (error) => {
                 console.error('Connection error:', error);
-                localStatus.textContent = 'Connection error: ' + error.message;
-                localStatus.className = 'status error';
+                updateStatus(localStatus, 'Connection error: ' + error.message, 'error');
                 updateUI();
             });
             
@@ -174,6 +205,7 @@
             socket.on('offer', handleOffer);
             socket.on('answer', handleAnswer);
             socket.on('ice-candidate', handleIceCandidate);
+            socket.on('error', handleRemoteError);
             
             // Button event listeners
             startBtn.addEventListener('click', startSharing);
@@ -182,25 +214,28 @@
             copyIdBtn.addEventListener('click', copyConnectionId);
         }
         
+        function updateStatus(element, message, type = '') {
+            element.textContent = message;
+            element.className = 'status' + (type ? ' ' + type : '');
+        }
+        
         function updateUI() {
-            startBtn.disabled = isSharing;
+            startBtn.disabled = isSharing || isMobile;
             connectBtn.disabled = isConnected || !socket.connected || !remoteIdInput.value.trim();
             disconnectBtn.disabled = !isConnected;
-            
-            if (isConnected) {
-                remoteStatus.textContent = 'Connected to peer';
-                remoteStatus.className = 'status connected';
-            } else {
-                remoteStatus.className = 'status';
-            }
         }
         
         async function startSharing() {
             try {
-                // Get screen share stream
-                localStatus.textContent = 'Requesting screen share...';
-                localStatus.className = 'status connecting';
+                // Check for screen sharing support
+                if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia) {
+                    updateStatus(localStatus, 'Screen sharing not supported', 'error');
+                    return;
+                }
                 
+                updateStatus(localStatus, 'Requesting screen share...', 'connecting');
+                
+                // Get screen share stream
                 localStream = await navigator.mediaDevices.getDisplayMedia({
                     video: {
                         displaySurface: 'monitor',
@@ -212,8 +247,7 @@
                 });
                 
                 isSharing = true;
-                localStatus.textContent = 'Screen sharing active';
-                localStatus.className = 'status connected';
+                updateStatus(localStatus, 'Screen sharing active', 'connected');
                 connectionInfo.style.display = 'block';
                 connectionId.value = socketId;
                 
@@ -226,8 +260,7 @@
                 
             } catch (error) {
                 console.error('Error starting screen share:', error);
-                localStatus.textContent = `Error: ${error.message}`;
-                localStatus.className = 'status error';
+                updateStatus(localStatus, `Error: ${error.message}`, 'error');
                 isSharing = false;
                 updateUI();
             }
@@ -240,8 +273,7 @@
             }
             
             isSharing = false;
-            localStatus.textContent = 'Screen sharing stopped';
-            localStatus.className = 'status';
+            updateStatus(localStatus, 'Screen sharing stopped');
             connectionInfo.style.display = 'none';
             resetConnection();
             updateUI();
@@ -250,49 +282,54 @@
         async function connectToPeer() {
             const remoteId = remoteIdInput.value.trim();
             if (!remoteId) {
-                remoteStatus.textContent = 'Please enter a connection ID';
-                remoteStatus.className = 'status error';
+                updateStatus(remoteStatus, 'Please enter a connection ID', 'error');
                 return;
             }
             
             if (!socket.connected) {
-                remoteStatus.textContent = 'Not connected to signaling server';
-                remoteStatus.className = 'status error';
+                updateStatus(remoteStatus, 'Not connected to signaling server', 'error');
                 return;
             }
             
-            remoteStatus.textContent = 'Connecting to peer...';
-            remoteStatus.className = 'status connecting';
+            updateStatus(remoteStatus, 'Connecting to peer...', 'connecting');
             isCaller = true;
             isConnected = true;
             updateUI();
             
             try {
-                // Create peer connection
+                // Create peer connection with better configuration
                 peerConnection = new RTCPeerConnection({
                     iceServers: [
                         { urls: 'stun:stun.l.google.com:19302' },
                         { urls: 'stun:stun1.l.google.com:19302' },
-                        { urls: 'stun:stun2.l.google.com:19302' }
-                    ]
+                        { urls: 'stun:stun2.l.google.com:19302' },
+                        { urls: 'stun:stun3.l.google.com:19302' },
+                        { urls: 'stun:stun4.l.google.com:19302' }
+                    ],
+                    iceTransportPolicy: 'all',
+                    bundlePolicy: 'max-bundle',
+                    rtcpMuxPolicy: 'require'
                 });
                 
-                // Set up event handlers
+                // Enhanced event handlers with better logging
                 peerConnection.onicecandidate = (event) => {
+                    console.log('ICE Candidate:', event.candidate);
                     if (event.candidate) {
                         socket.emit('ice-candidate', {
                             to: remoteId,
                             candidate: event.candidate
                         });
+                    } else {
+                        console.log('ICE Gathering Complete');
                     }
                 };
                 
                 peerConnection.ontrack = (event) => {
+                    console.log('Track received:', event.track, event.streams);
                     if (event.streams && event.streams[0]) {
                         remoteVideo.srcObject = event.streams[0];
                         remoteVideo.style.display = 'block';
-                        remoteStatus.textContent = 'Connected to peer';
-                        remoteStatus.className = 'status connected';
+                        updateStatus(remoteStatus, 'Connected to peer', 'connected');
                         isConnected = true;
                         updateUI();
                     }
@@ -302,17 +339,28 @@
                     console.log('ICE connection state:', peerConnection.iceConnectionState);
                     if (peerConnection.iceConnectionState === 'disconnected' || 
                         peerConnection.iceConnectionState === 'failed') {
-                        remoteStatus.textContent = 'Disconnected';
-                        remoteStatus.className = 'status error';
+                        updateStatus(remoteStatus, 'Disconnected', 'error');
                         resetConnection();
                     }
                 };
                 
-                // Create offer
+                peerConnection.onconnectionstatechange = () => {
+                    console.log('Connection state:', peerConnection.connectionState);
+                };
+                
+                peerConnection.onsignalingstatechange = () => {
+                    console.log('Signaling state:', peerConnection.signalingState);
+                };
+                
+                // Create offer with better options
                 const offer = await peerConnection.createOffer({
-                    offerToReceiveVideo: true
+                    offerToReceiveVideo: true,
+                    iceRestart: false,
+                    voiceActivityDetection: false
                 });
+                
                 await peerConnection.setLocalDescription(offer);
+                console.log('Local description set:', peerConnection.localDescription);
                 
                 socket.emit('offer', {
                     to: remoteId,
@@ -321,8 +369,7 @@
                 
             } catch (error) {
                 console.error('Error creating connection:', error);
-                remoteStatus.textContent = `Error: ${error.message}`;
-                remoteStatus.className = 'status error';
+                updateStatus(remoteStatus, `Error: ${error.message}`, 'error');
                 resetConnection();
             }
         }
@@ -336,8 +383,7 @@
                 return;
             }
             
-            remoteStatus.textContent = 'Incoming connection request...';
-            remoteStatus.className = 'status connecting';
+            updateStatus(remoteStatus, 'Incoming connection request...', 'connecting');
             isCaller = false;
             isConnected = true;
             updateUI();
@@ -347,8 +393,13 @@
                     iceServers: [
                         { urls: 'stun:stun.l.google.com:19302' },
                         { urls: 'stun:stun1.l.google.com:19302' },
-                        { urls: 'stun:stun2.l.google.com:19302' }
-                    ]
+                        { urls: 'stun:stun2.l.google.com:19302' },
+                        { urls: 'stun:stun3.l.google.com:19302' },
+                        { urls: 'stun:stun4.l.google.com:19302' }
+                    ],
+                    iceTransportPolicy: 'all',
+                    bundlePolicy: 'max-bundle',
+                    rtcpMuxPolicy: 'require'
                 });
                 
                 // Add local stream
@@ -356,8 +407,9 @@
                     peerConnection.addTrack(track, localStream);
                 });
                 
-                // Set up event handlers
+                // Set up enhanced event handlers
                 peerConnection.onicecandidate = (event) => {
+                    console.log('ICE Candidate:', event.candidate);
                     if (event.candidate) {
                         socket.emit('ice-candidate', {
                             to: data.from,
@@ -370,25 +422,33 @@
                     console.log('ICE connection state:', peerConnection.iceConnectionState);
                     if (peerConnection.iceConnectionState === 'disconnected' || 
                         peerConnection.iceConnectionState === 'failed') {
-                        remoteStatus.textContent = 'Disconnected';
-                        remoteStatus.className = 'status error';
+                        updateStatus(remoteStatus, 'Disconnected', 'error');
                         resetConnection();
                     }
                 };
                 
-                // Process offer and send answer
+                peerConnection.ontrack = (event) => {
+                    console.log('Track received:', event.track, event.streams);
+                    if (event.streams && event.streams[0]) {
+                        remoteVideo.srcObject = event.streams[0];
+                        remoteVideo.style.display = 'block';
+                    }
+                };
+                
+                // Process offer with error handling
                 await peerConnection.setRemoteDescription(new RTCSessionDescription(data.offer));
+                console.log('Remote description set:', peerConnection.remoteDescription);
+                
                 const answer = await peerConnection.createAnswer();
                 await peerConnection.setLocalDescription(answer);
+                console.log('Local description set:', peerConnection.localDescription);
                 
                 socket.emit('answer', {
                     to: data.from,
                     answer: answer
                 });
                 
-                remoteStatus.textContent = 'Connected to peer';
-                remoteStatus.className = 'status connected';
-                remoteVideo.style.display = 'block';
+                updateStatus(remoteStatus, 'Connected to peer', 'connected');
                 updateUI();
                 
             } catch (error) {
@@ -397,8 +457,7 @@
                     to: data.from,
                     message: error.message
                 });
-                remoteStatus.textContent = `Error: ${error.message}`;
-                remoteStatus.className = 'status error';
+                updateStatus(remoteStatus, `Error: ${error.message}`, 'error');
                 resetConnection();
             }
         }
@@ -408,15 +467,14 @@
             
             try {
                 await peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
-                remoteStatus.textContent = 'Connected to peer';
-                remoteStatus.className = 'status connected';
+                console.log('Remote description set:', peerConnection.remoteDescription);
+                updateStatus(remoteStatus, 'Connected to peer', 'connected');
                 remoteVideo.style.display = 'block';
                 isConnected = true;
                 updateUI();
             } catch (error) {
                 console.error('Error handling answer:', error);
-                remoteStatus.textContent = `Error: ${error.message}`;
-                remoteStatus.className = 'status error';
+                updateStatus(remoteStatus, `Error: ${error.message}`, 'error');
                 resetConnection();
             }
         }
@@ -426,15 +484,20 @@
             
             try {
                 await peerConnection.addIceCandidate(new RTCIceCandidate(data.candidate));
+                console.log('Added ICE candidate successfully');
             } catch (error) {
                 console.error('Error adding ICE candidate:', error);
             }
         }
         
+        function handleRemoteError(data) {
+            updateStatus(remoteStatus, `Remote error: ${data.message}`, 'error');
+            resetConnection();
+        }
+        
         function disconnectFromPeer() {
             resetConnection();
-            remoteStatus.textContent = 'Disconnected';
-            remoteStatus.className = 'status';
+            updateStatus(remoteStatus, 'Disconnected');
             updateUI();
         }
         
@@ -456,12 +519,10 @@
             document.execCommand('copy');
             
             const originalText = localStatus.textContent;
-            localStatus.textContent = 'Connection ID copied to clipboard!';
-            localStatus.className = 'status connected';
+            updateStatus(localStatus, 'Connection ID copied to clipboard!', 'connected');
             
             setTimeout(() => {
-                localStatus.textContent = originalText;
-                localStatus.className = isSharing ? 'status connected' : 'status';
+                updateStatus(localStatus, originalText, isSharing ? 'connected' : '');
             }, 2000);
         }
         
