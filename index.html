@@ -604,10 +604,23 @@
             }
 
             init() {
+                // Check for screen sharing support
+                if (!this.checkScreenShareSupport()) {
+                    this.uiManager.showError('Screen sharing not supported in this browser');
+                    return;
+                }
+
                 this.generateCredentials();
                 this.uiManager.initUI();
                 this.eventManager.setupEventListeners();
                 this.uiManager.showConsentModal();
+            }
+
+            checkScreenShareSupport() {
+                if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia) {
+                    return false;
+                }
+                return true;
             }
 
             generateCredentials() {
@@ -652,12 +665,24 @@
 
             async startHosting() {
                 try {
+                    if (!window.isSecureContext) {
+                        throw new Error('Screen sharing requires HTTPS or localhost');
+                    }
+
                     this.state.isHost = true;
                     
                     // First capture the screen
                     this.state.mediaStream = await navigator.mediaDevices.getDisplayMedia({
                         video: true,
                         audio: false
+                    });
+                    
+                    // Handle when user stops sharing
+                    this.state.mediaStream.getTracks().forEach(track => {
+                        track.onended = () => {
+                            this.uiManager.showError('You stopped screen sharing');
+                            this.disconnect();
+                        };
                     });
                     
                     // Then start WebRTC connection with the stream
@@ -672,8 +697,22 @@
                     
                 } catch (error) {
                     console.error('Hosting error:', error);
-                    this.uiManager.showError(error.message);
+                    
+                    let errorMessage = error.message;
+                    if (error.name === 'NotAllowedError') {
+                        errorMessage = 'Screen sharing permission denied';
+                    } else if (error.name === 'NotFoundError') {
+                        errorMessage = 'No screen source selected';
+                    }
+                    
+                    this.uiManager.showError(errorMessage);
                     this.uiManager.resetConnectionState();
+                    
+                    // Clean up if media stream was partially acquired
+                    if (this.state.mediaStream) {
+                        this.state.mediaStream.getTracks().forEach(track => track.stop());
+                        this.state.mediaStream = null;
+                    }
                 }
             }
 
@@ -701,7 +740,6 @@
                 if (command.type === 'mouse' && !this.state.permissions.mouse) return;
                 if (command.type === 'keyboard' && !this.state.permissions.keyboard) return;
                 
-                // In a real app, this would control the host machine
                 console.log('Executing command:', command);
             }
 
@@ -715,7 +753,6 @@
             }
 
             disconnect() {
-                // Stop all media tracks
                 if (this.state.mediaStream) {
                     this.state.mediaStream.getTracks().forEach(track => track.stop());
                     this.state.mediaStream = null;
